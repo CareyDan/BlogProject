@@ -17,48 +17,70 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
-let posts = [];
+//let posts = [];
+
+const postsSchema = {
+  title: String,
+  body: String
+}
+const Post = mongoose.model("Post", postsSchema);
 
 app.get("/posts/:route", (req,res)=>{
-  posts.forEach((post)=>{
-    let found = false;
-    if (_.lowerCase(req.params.route) === _.lowerCase(post.title)) {
-      console.log("Match found.");
-      res.render("post", {postTitle: post.title, postBody: post.body });
-      found = true;
-    }
-    if (!found) {
-      console.log("Match not found.");
-    }
+  var str = req.params.route;
+  var route = str.replace(":", "");
+  console.log(route);
+  Post.findOne({"title": route}, (err, result)=>{
+    res.render("post", {postTitle: result.title, postBody: result.body });
   });
-  console.log(req.params.route);
-})
+
+  // posts.forEach((post)=>{
+  //   let found = false;
+  //   if (_.lowerCase(req.params.route) === _.lowerCase(post.title)) {
+  //     console.log("Match found.");
+  //     res.render("post", {postTitle: post.title, postBody: post.body });
+  //     found = true;
+  //   }
+  //   if (!found) {
+  //     console.log("Match not found.");
+  //   }
+  // });
+  // console.log(req.params.route);
+});
 
 app.get("/", (req,res)=>{
-  res.render("home", {homeText: homeStartingContent, postsArray: posts});
+  Post.find({}, (err, results)=>{
+    //console.log(results);
+    res.render("home", {homeText: homeStartingContent, postsArray: results});
+  });
 });
 
 app.get("/about", (req,res)=>{
   res.render("about", {aboutText: aboutContent});
-  console.log("Get request logged for about.");
+  //console.log("Get request logged for about.");
 });
 
 app.get("/contact", (req,res)=>{
   res.render("contact", {contactText: contactContent});
-  console.log("Get request logged for contact.");
+  //console.log("Get request logged for contact.");
 });
 
 app.get("/compose", (req,res)=>{
   res.render("compose");
-  console.log("Get request logged for compose.");
+  //console.log("Get request logged for compose.");
 });
 
 app.post("/compose", (req,res)=>{
-  const post = {
+  // const post = {
+  //   title: req.body.postTitle,
+  //   body: req.body.postBody
+  // };
+  // posts.push(post);
+
+  const newPost = new Post({
     title: req.body.postTitle,
     body: req.body.postBody
-  };
-  posts.push(post);
+  });
+  Post.create(newPost);
   res.redirect("/");
 });
 
